@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:api_task/modules/authentication/controllers/auth_controller.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get_ip_address/get_ip_address.dart';
 
 import '../../../utils/const/custom_text_field.dart';
 
@@ -33,18 +38,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void initState() {
     // TODO: implement initState
+    getIPAddress();
     getDeviceDetails();
     super.initState();
   }
 
   getDeviceDetails() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    print('Running on ${androidInfo.model}');
-    deviceModelController.text =  androidInfo.model;
-    deviceIdController.text =  androidInfo.id;
+    if(Platform.isAndroid){
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      print('Running on ${androidInfo.model}');
+      deviceModelController.text =  androidInfo.model;
+      deviceIdController.text =  androidInfo.id;
+    }
+    if(Platform.isIOS){
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      print('Running on ${iosInfo.utsname.machine}');  // e.g. "iPod7,1"
+      deviceModelController.text =  iosInfo.utsname.machine;
+      // deviceIdController.text =  iosInfo.;
+    }
   }
 
+  getIPAddress() async {
+    var ipAddress = IpAddress(type: RequestType.json);
+    dynamic data = await ipAddress.getIpAddress();
+    print("data ${data['ip']}");
+    deviceIpController.text = data['ip'].toString();
+  }
+
+
+  final AuthController authController =  Get.put(AuthController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -265,7 +288,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        // Perform signup here
+                        authController.signUp(email: emailController.text, city: cityController.text,
+                          deviceId: deviceIdController.text,
+                          deviceIp: deviceIpController.text,
+                          deviceModel: deviceModelController.text,
+                          fullName: fullNameController.text,
+                          firstName: firstNameController.text,
+                          lastName: lastNameController.text,
+                          middleName: middleNameController.text,
+                          phoneNumber: phoneNumberController.text,
+                          zipCode: zipCodeController.text,
+                          state: street1Controller.text,
+                          password: passwordController.text,
+                          street1: street1Controller.text,
+                          street2: street2Controller.text,
+                          country: countryController.text,
+                          username: usernameController.text,
+                          walletPin: walletPinController.text
+                        );
+
                       }
                     },
                     child: Text('Sign Up'),
